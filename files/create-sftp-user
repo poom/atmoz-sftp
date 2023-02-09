@@ -63,11 +63,16 @@ if [ -n "$gid" ]; then
     fi
 
     useraddOptions+=(--gid "$gid")
+else
+    gid=$(getent group users | cut -d: -f3)
 fi
+
+uid="$(id -u "$user")"
 
 useradd "${useraddOptions[@]}" "$user"
 mkdir -p "/home/$user"
-chown root:root "/home/$user"
+# Allow user upload to home folder
+chown "$user":"$gid" "/home/$user"
 chmod 755 "/home/$user"
 
 # Retrieving user id to use it in chown commands instead of the user name
@@ -105,7 +110,7 @@ if [ -n "$dir" ]; then
         if [ ! -d "$dirPath" ]; then
             log "Creating directory: $dirPath"
             mkdir -p "$dirPath"
-            chown -R "$uid:users" "$dirPath"
+            chown -R "$uid:$gid" "$dirPath"
         else
             log "Directory already exists: $dirPath"
         fi
